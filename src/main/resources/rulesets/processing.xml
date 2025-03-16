@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         name="Processing Ruleset"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+    <description>
+        Ruleset with custom rules specific to Processing code.
+        Developed as part of the "The Smell of Poor Design" bachelor research project.
+    </description>
+
+    <rule name="DecentralizedDrawingRule"
+          message="Do not use drawing method {0} in method {1}, {1} is called outside of the draw sequence and can therefore not contain drawing methods."
+          class="nl.utwente.processing.pmd.rules.DecentralizedDrawingRule">
+        <description>
+            Methods that draw on screen should only be called from drawing methods: methods that are (indirectly) called
+            solely by the draw method.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                float x, y, x2, y2;
+                void setup() {
+                    //Wrong: Do not use drawing functions from non-drawing methods.
+                    rect(x, y, x2, y2);
+                }
+            ]]>
+        </example>
+    </rule>
+
+     <rule name="EventHandlingRule"
+          message="No event methods found"
+          class="nl.utwente.processing.pmd.rules.EventHandlingRule">
+        <description>
+            Should use event Methods
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                 void draw() {
+                     //Wrong: Do not use mouseX, mouseY outside event handlers
+                     rect(mouseX, mouseY, mouseX + 20, mouseY + 20);
+                 }
+             ]]>
+        </example>
+    </rule>
+  
+
+    <rule name="DecentralizedEventHandlingRule"
+          message="Do not use global event variable {0} in method {1}, as {1} is not one of the event handling methods."
+          class="nl.utwente.processing.pmd.rules.DecentralizedEventHandlingRule">
+        <description>
+            Global event handling variables should only be used inside the specified event handler methods.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                 void draw() {
+                     //Wrong: Do not use mouseX, mouseY outside event handlers
+                     rect(mouseX, mouseY, mouseX + 20, mouseY + 20);
+                 }
+             ]]>
+        </example>
+    </rule>
+
+   
+
+    
+
+    <rule name="LongMethodRule"
+          message="The method {0} is too long, {1} lines of code are counted. The method should be made more efficient, split in multiple methods, or responsibilty should be delegated to other objects/classes."
+          class="nl.utwente.processing.pmd.rules.LongMethodRule">
+        <description>
+            Methods longer than a certain amount of rules (50 by default) should be split into separate method calls.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                 void method() {
+                     //Wrong: method is too long.
+                     println("T")
+                     println("h")
+                     println("i")
+                     println("s")
+                     println("")
+                     println("m")
+                     println("e")
+                     println("t")
+                     println("h")
+                     println("o")
+                     println("d")
+                     println("")
+                     println("i")
+                     println("s")
+                     println("")
+                     println("w")
+                     println("a")
+                     println("y")
+                     println("")
+                     println("t")
+                     println("o")
+                     println("o")
+                     println("")
+                     println("l")
+                     println("o")
+                     println("n")
+                     println("g")
+                 }
+             ]]>
+        </example>
+    </rule>
+
+    <rule name="LongParameterListRule"
+          message="The method {0} has too many parameters, {1} are counted. The parameters should be merged into objects or the method should be split."
+          class="nl.utwente.processing.pmd.rules.LongParameterListRule">
+        <description>
+            Methods should not accept too many parameters.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+                 void correct(int x1, int x2, int y1, int y2, int r) {
+                     //Correct, 5 parameters.
+                 }
+                 void incorrect(int x1, int x2, int z1, int y1, int y2, int z2) {
+                     //Wrong: 6 parameters.
+                 }
+             ]]>
+        </example>
+    </rule>
+
+   
+</ruleset>

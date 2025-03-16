@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Processing Ruleset"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0" xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+    <description>
+        Ruleset to use for Processing projects in Atelier.
+    </description>
+
+    <!-- Smell of Processing custom rules, defined in nl.utwente.processing.pmd.rules -->
+    <rule ref="rulesets/processing.xml"/>
+
+    <rule ref="category/java/design.xml/CyclomaticComplexity"
+          message = "The {0} ''{1}'' seems to be very complex. Consider dividing the work.">
+           <priority>3</priority>
+        <properties>
+            <property name="violationSuppressRegex" value="^The class.*"/>
+            <property name="methodReportLevel" value="12"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/TooManyFields" message="You have many class variables/attributes. Check if some could be local, or should be part of a separate object.">
+     <priority>3</priority>
+        <properties>
+            <property name="maxfields" value="2"/>
+        </properties>
+    </rule>
+   <rule ref="category/java/design.xml/AvoidDeeplyNestedIfStmts">
+    <priority>3</priority>
+        <properties>
+            <property name="problemDepth" value="4"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/ControlStatementBraces">
+     <priority>3</priority>
+     </rule>
+    <rule ref="category/java/errorprone.xml/AssignmentInOperand">
+     <priority>3</priority>
+    </rule>
+    <rule ref="category/java/design.xml/SingularField">
+     <priority>3</priority>
+        <properties>
+            <property name="checkInnerClasses" value="true"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/errorprone.xml/IdempotentOperations">
+     <priority>3</priority>
+     </rule>
+    <rule ref="category/java/design.xml/SimplifyBooleanExpressions">
+     <priority>3</priority>
+        </rule>
+    <rule ref="category/java/documentation.xml/UncommentedEmptyMethodBody">
+     <priority>3</priority>
+        </rule>
+    <rule ref="category/java/documentation.xml/UncommentedEmptyConstructor" message="It is very uncommon to have an empty constructor. Use it to set the initial values of a new object.">
+     <priority>3</priority>
+    </rule>
+    <rule ref="category/java/errorprone.xml/EmptyIfStmt"> 
+     <priority>3</priority>
+    </rule>
+    <rule ref="category/java/errorprone.xml/EmptyStatementNotInLoop">
+        <priority>3</priority>
+    </rule>
+
+    <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingMethodName">
+        <priority>3</priority>
+    </rule>
+    <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingTypeName">
+        <priority>3</priority>
+    </rule>
+    <rule ref="category/java/codestyle.xml/LocalVariableNamingConventions" message="Please use the 'camelCase' naming convention.">
+       <priority>3</priority>
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/FieldNamingConventions" message="The {0} name ''{1}'' does not match the 'camelCase' naming convention.">
+          <priority>3</priority>
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/FormalParameterNamingConventions" message="Please use the 'camelCase' naming convention.">
+        <priority>3</priority>
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/LongVariable">
+         <priority>3</priority>
+        <properties>
+            <property name="minimum" value="24"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/ClassNamingConventions" message="Please use the 'PascalCase' naming convention for class names.">
+         <priority>3</priority>
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/MethodNamingConventions" message="Please use the 'camelCase' naming convention.">
+        <priority>3</priority>
+        <properties>
+            <property name="violationSuppressRegex" value=".*underscore.*"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/codestyle.xml/ShortMethodName">
+        <priority>3</priority>
+    </rule>
+    <rule ref="category/java/codestyle.xml/ShortVariable">
+        <priority>3</priority>
+        <properties>
+            <property name="violationSuppressRegex" value=".*like [xyzijklmnt]_?$|.*like d[xyzt]_?$|.*like [id]_?$|.*like m[xy]_?$|.*like m[XY]_?$"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter">
+        <priority>3</priority>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable">
+        <priority>3</priority>
+    </rule>
+
+    
+
+</ruleset>
