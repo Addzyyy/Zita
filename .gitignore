@@ -1,0 +1,11 @@
+.DS_Store
+**/.DS_Store
+.idea
+target/
+*.iml
+.vscode/
+*.log
+*.class
+*.jar
+*.swp
+*.bak
