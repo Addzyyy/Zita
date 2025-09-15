@@ -16,10 +16,8 @@ import nl.utwente.processing.pmd.utils.uniqueCallStack
  */
 class HasDrawMethodRule: AbstractJavaRule() {
 
-    private var eventStack: Set<ASTMethodDeclaration> = emptySet();
 
     override fun visit(node: ASTCompilationUnit?, data: Any?): Any? {
-        this.eventStack = emptySet()
         return super.visit(node, data)
     }
 
@@ -29,9 +27,8 @@ class HasDrawMethodRule: AbstractJavaRule() {
             val scope = node.scope as? ClassScope
             val methodDecls = scope?.findMethods(ProcessingApplet.DRAW_METHOD_SIGNATURE);
             if (methodDecls.isNullOrEmpty()) {
-                addViolationWithMessage(data, node, message)
-            } else {
-                this.eventStack = scope.uniqueCallStack(*methodDecls)
+                // setting line and column to 0, as this is a class level violation and does not have a specific line
+                addViolationWithMessage(data, node, message,0,0);
             }
         }
         return super.visit(node, data)
