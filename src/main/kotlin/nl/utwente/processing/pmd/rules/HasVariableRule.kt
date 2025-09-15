@@ -1,4 +1,4 @@
-package nl.utwente.processing.pmd.rules
+ package nl.utwente.processing.pmd.rules
 
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
 import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclarator
