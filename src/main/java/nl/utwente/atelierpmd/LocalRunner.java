@@ -59,9 +59,8 @@ public class LocalRunner {
             LinkedList<String> liViolations = new LinkedList<>();
             Map<String, Integer> mViolations = new HashMap<String, Integer>();
 
-            System.out.println("These warnings were created by the Zita code quality tool \n" +
-                                            " They are advisory and may sometimes be incorrect.\n" +
-                                            " See if they make sense to you, and consult the TA if needed.\n");
+
+            System.out.println("These suggestions were generated automatically by the Zita code quality tool. They are designed to help you improve your code, but they may occasionally be incorrect. If you’re unsure about any suggestion, please ask your TA for clarification.\n");
             /* Generate Comments for Violations Found */
             while (violations.hasNext()) {
                 var violation = violations.next();
@@ -69,17 +68,17 @@ public class LocalRunner {
 
                 LineInFile begin, end;
                 try {
-                    
+
                     if (violation.getBeginLine() != 1) {
-                    begin = project.mapJavaProjectLineNumber(violation.getBeginLine());
-                    end = project.mapJavaProjectLineNumber(violation.getEndLine());
+                        begin = project.mapJavaProjectLineNumber(violation.getBeginLine());
+                        end = project.mapJavaProjectLineNumber(violation.getEndLine());
                     } else {
                         begin = new LineInFile(1,new ProcessingFile(violation.getDescription(), violation.getFilename(),""));
                         end = new LineInFile(1,new ProcessingFile(violation.getDescription(), violation.getFilename(),""));
                     }
 
 
-                   
+
 
                     if (!begin.getFile().getId().equals(end.getFile().getId())) {
                         System.out.println("! Dismissing violation of " + violation.getRule().getName() + ": Line numbers are not in the same source file\n");
@@ -104,22 +103,50 @@ public class LocalRunner {
                 var lineEnd = end.getLine();
                 var charEnd = violation.getEndColumn();
 
+                if(lineStart == -1 || lineEnd == -1) {
+                    StringBuilder sbViolationMessage = new StringBuilder();
+                    sbViolationMessage.append("> ");
+                    sbViolationMessage.append(violation.getDescription()).append("\n");
+                    liViolations.addLast(sbViolationMessage.toString());
+                    continue;
+
+                }
+
                 if (lineStart == lineEnd && charStart == charEnd) {
-                    var line = begin.getFile().getContent().lines().collect(Collectors.toList()).get(lineStart - 1);
+                    var lines = begin.getFile().getContent().lines().collect(Collectors.toList());
+                    String line;
+                    if (lineStart > 0 && lineStart <= lines.size()) {
+                        line = lines.get(lineStart - 1);
+                    } else {
+                        line = "[Line unavailable]";
+                        System.err.println("⚠️ Warning: Requested line " + lineStart + " is out of bounds. Total lines: " + lines.size());
+                    }
+
                     charStart = line.indexOf(line.trim());
                     charEnd = line.length();
                 } else {
                     charStart = Math.max(0, charStart - 1);
                 }
-
+                String fileName = begin.getFile().getName();
                 StringBuilder sbViolationMessage = new StringBuilder();
-                sbViolationMessage.append(violation.getDescription()).append("\n");
+
+                sbViolationMessage
+                        .append("> In file ")
+                        .append(fileName)
+                        .append(" at line ")
+                        .append(lineStart)
+                        .append(": ")
+                        .append(violation.getDescription())
+                        .append("\n");
+
+
+
                 liViolations.addLast(sbViolationMessage.toString());
             }
-            
-              /* Generate Summary Comment  */
+
+            /* Generate Summary Comment  */
             //  StringBuilder sbSummaryMessage = new StringBuilder("These warnings were created by the Zita code quality tool.\nThey are advisory and may be sometimes incorrect.\nSee if they make sense to you, and consult the TA if needed:\n");
-            
+
             //  liViolations.addFirst(sbSummaryMessage.toString());
 
             /* Print all comments */
@@ -136,7 +163,7 @@ public class LocalRunner {
                     System.out.println("Error during program load, ZITA could not properly read the program files.");
                 }
                 else {
-                    System.out.println("! Got error: " + err.getMsg() + "\n");
+                    System.out.println("Error during program load, ZITA could not properly read the program files");
                 }
             }
         }
@@ -154,23 +181,23 @@ public class LocalRunner {
             System.out.println("Usage: <project path>");
             return;
         }
-        
-     
-        
+
+
+
 
 
 
         var path = Path.of(args[0]);
         var rulePath = Path.of(args[1]).toString();
         var project = new ProcessingProject(
-            Files.find(path, 10000, (p, attr) -> attr.isRegularFile() && p.getFileName().toString().endsWith(".pde"))
-                .map(p -> new ProcessingFile(p.getFileName().toString(), p.getFileName().toString(), readString(p)))
-                .collect(Collectors.toList())
+                Files.find(path, 10000, (p, attr) -> attr.isRegularFile() && p.getFileName().toString().endsWith(".pde"))
+                        .map(p -> new ProcessingFile(p.getFileName().toString(), p.getFileName().toString(), readString(p)))
+                        .collect(Collectors.toList())
         );
 
         var runner = new PMDRunner(rulePath);
         var renderer = new AtelierStyleTextRenderer(project);
         renderer.setWriter(new PrintWriter(System.out));
-        runner.Run(project, renderer); 
+        runner.Run(project, renderer);
     }
 }
