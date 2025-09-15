@@ -599,8 +599,6 @@
 
     <rule ref="category/java/design.xml/AvoidDeeplyNestedIfStmts" />
 
-    <rule ref="category/java/design.xml/CognitiveComplexity" />
-
     <rule ref="category/java/design.xml/CollapsibleIfStatements" />
 
     <rule ref="category/java/design.xml/CouplingBetweenObjects" />
