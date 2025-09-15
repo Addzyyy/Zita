@@ -40,10 +40,9 @@ public class PMDRunner {
         try {
             renderer.start();
 
-            for(int i = 0; i < project.getFileNames().size();i++) {
-                datasources.add(new ReaderDataSource(new StringReader(project.getJavaProjectCodeIndividualFiles().get(i)), project.getFileNames().get(i)));
-
-            }
+            List<DataSource> datasources = Collections.singletonList(
+                    new ReaderDataSource(new StringReader(project.getJavaProjectCode()), "Processing.pde")
+            ); 
                                        
             try {
                 PMD.processFiles(

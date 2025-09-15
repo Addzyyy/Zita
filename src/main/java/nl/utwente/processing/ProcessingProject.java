@@ -22,19 +22,8 @@ public class ProcessingProject {
         return str.chars().filter(x -> x == ch).count();
     }
 
-    public List<String> getFileNames() {
-        ArrayList<String> retval = new ArrayList<String>();
-       
-
-        for (ProcessingFile file : files) {
-            retval.add(file.getName());
-        }
-
-        return retval;
-    }
-
     /** Roughly convert Processing code to Java code */
-    private String toJava(String code, String fileName) {
+    private String toJava(String code) {
         code = START_JAVA_CODE + code + END_JAVA_CODE;
         code = code.replaceAll("\\bint\\s*\\(", "toInt(");
         code = code.replaceAll("\\bfloat\\s*\\(", "toFloat(");
@@ -42,18 +31,6 @@ public class ProcessingProject {
         code = code.replace("(#", "(0x");
         code = code.replaceAll("import(.)*;", "");
         return code;
-    }
-
-    public List<String> getProjectCodeIndividualFiles() {
-
-        ArrayList<String> retval = new ArrayList<String>();
-       
-
-        for (ProcessingFile file : files) {
-            retval.add(file.getContent());
-        }
-
-        return retval;
     }
 
     /** Combine all Processing files into a single string */
@@ -80,18 +57,7 @@ public class ProcessingProject {
 
     /** Get the full project code converted to Java */
     public String getJavaProjectCode() {
-        return toJava(getProjectCode(), "Processing");
-    }
-    public List<String> getJavaProjectCodeIndividualFiles() {
-
-        ArrayList<String> retval = new ArrayList<String>();
-       
-
-        for (int i = 0; i < files.size(); i++) {
-            retval.add(toJava(files.get(i).getContent(), files.get(i).getName()));
-        }
-        
-        return retval;
+        return toJava(getProjectCode());
     }
 
     /** Map line in Java code back to Processing file and line */
