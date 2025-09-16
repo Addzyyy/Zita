@@ -1,30 +1,19 @@
-package nl.utwente.atelierpmd;
-
+package nl.utwente;
 import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
-import net.sourceforge.pmd.renderers.SarifRenderer;
-import net.sourceforge.pmd.renderers.XMLRenderer;
-import net.sourceforge.pmd.renderers.TextRenderer;
 import nl.utwente.processing.LineInFile;
 import nl.utwente.processing.ProcessingFile;
 import nl.utwente.processing.ProcessingProject;
-import nl.utwente.processing.pmd.MyXmlRenderer;
 import nl.utwente.processing.pmd.PMDException;
 import nl.utwente.processing.pmd.PMDRunner;
-
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
-public class LocalRunner {
+public class Runner {
     // I'm sorry, but this is only for development purposes
     static String readString(Path path) {
         try {
