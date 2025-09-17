@@ -1,6 +1,9 @@
 package nl.utwente;
+
 import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
+import net.sourceforge.pmd.renderers.HTMLRenderer;
+import net.sourceforge.pmd.renderers.JsonRenderer;
 import nl.utwente.processing.LineInFile;
 import nl.utwente.processing.ProcessingFile;
 import nl.utwente.processing.ProcessingProject;
@@ -48,12 +51,11 @@ public class Runner {
             LinkedList<String> liViolations = new LinkedList<>();
             Map<String, Integer> mViolations = new HashMap<String, Integer>();
 
-
-            System.out.println("These suggestions were generated automatically by the Zita code quality tool. They are designed to help you improve your code, but they may occasionally be incorrect. If you’re unsure about any suggestion, please ask your TA for clarification.\n");
+            System.out.println(
+                    "These suggestions were generated automatically by the Zita code quality tool. They are designed to help you improve your code, but they may occasionally be incorrect. If you’re unsure about any suggestion, please ask your TA for clarification.\n");
             /* Generate Comments for Violations Found */
             while (violations.hasNext()) {
                 var violation = violations.next();
-
 
                 LineInFile begin, end;
                 try {
@@ -62,28 +64,28 @@ public class Runner {
                         begin = project.mapJavaProjectLineNumber(violation.getBeginLine());
                         end = project.mapJavaProjectLineNumber(violation.getEndLine());
                     } else {
-                        begin = new LineInFile(1,new ProcessingFile(violation.getDescription(), violation.getFilename(),""));
-                        end = new LineInFile(1,new ProcessingFile(violation.getDescription(), violation.getFilename(),""));
+                        begin = new LineInFile(1,
+                                new ProcessingFile(violation.getDescription(), violation.getFilename(), ""));
+                        end = new LineInFile(1,
+                                new ProcessingFile(violation.getDescription(), violation.getFilename(), ""));
                     }
 
-
-
-
                     if (!begin.getFile().getId().equals(end.getFile().getId())) {
-                        System.out.println("! Dismissing violation of " + violation.getRule().getName() + ": Line numbers are not in the same source file\n");
+                        System.out.println("! Dismissing violation of " + violation.getRule().getName()
+                                + ": Line numbers are not in the same source file\n");
                         continue;
                     }
 
                 } catch (IndexOutOfBoundsException ex) {
-                    System.out.println("! Dismissing violation of " + violation.getRule().getName() + ": Line number is not in a source file\n");
+                    System.out.println("! Dismissing violation of " + violation.getRule().getName()
+                            + ": Line number is not in a source file\n");
                     continue;
                 }
 
                 String sRuleName = mAddSpacesToString(violation.getRule().getName()).trim();
                 if (mViolations.containsKey(sRuleName)) {
                     mViolations.replace(sRuleName, mViolations.get(sRuleName) + 1);
-                }
-                else {
+                } else {
                     mViolations.put(sRuleName, 1);
                 }
 
@@ -92,7 +94,7 @@ public class Runner {
                 var lineEnd = end.getLine();
                 var charEnd = violation.getEndColumn();
 
-                if(lineStart == -1 || lineEnd == -1) {
+                if (lineStart == -1 || lineEnd == -1) {
                     StringBuilder sbViolationMessage = new StringBuilder();
                     sbViolationMessage.append("> ");
                     sbViolationMessage.append(violation.getDescription()).append("\n");
@@ -108,7 +110,8 @@ public class Runner {
                         line = lines.get(lineStart - 1);
                     } else {
                         line = "[Line unavailable]";
-                        System.err.println("⚠️ Warning: Requested line " + lineStart + " is out of bounds. Total lines: " + lines.size());
+                        System.err.println("⚠️ Warning: Requested line " + lineStart
+                                + " is out of bounds. Total lines: " + lines.size());
                     }
 
                     charStart = line.indexOf(line.trim());
@@ -128,19 +131,19 @@ public class Runner {
                         .append(violation.getDescription())
                         .append("\n");
 
-
-
                 liViolations.addLast(sbViolationMessage.toString());
             }
 
-            /* Generate Summary Comment  */
-            //  StringBuilder sbSummaryMessage = new StringBuilder("These warnings were created by the Zita code quality tool.\nThey are advisory and may be sometimes incorrect.\nSee if they make sense to you, and consult the TA if needed:\n");
+            /* Generate Summary Comment */
+            // StringBuilder sbSummaryMessage = new StringBuilder("These warnings were
+            // created by the Zita code quality tool.\nThey are advisory and may be
+            // sometimes incorrect.\nSee if they make sense to you, and consult the TA if
+            // needed:\n");
 
-            //  liViolations.addFirst(sbSummaryMessage.toString());
+            // liViolations.addFirst(sbSummaryMessage.toString());
 
             /* Print all comments */
-            for (String sMsg :
-                    liViolations) {
+            for (String sMsg : liViolations) {
                 System.out.println(sMsg);
             }
         }
@@ -150,8 +153,7 @@ public class Runner {
             for (var err : errors) {
                 if (err.getMsg().contains("Processing.pde")) {
                     System.out.println("Error during program load, ZITA could not properly read the program files.");
-                }
-                else {
+                } else {
                     System.out.println("Error during program load, ZITA could not properly read the program files");
                 }
             }
@@ -161,31 +163,59 @@ public class Runner {
             if (sWord.length() == 0) {
                 return "";
             }
-            return ((Character.isUpperCase(sWord.charAt(0)) ? " " : "") + sWord.charAt(0) + mAddSpacesToString(sWord.substring(1)));
+            return ((Character.isUpperCase(sWord.charAt(0)) ? " " : "") + sWord.charAt(0)
+                    + mAddSpacesToString(sWord.substring(1)));
         }
     }
 
     public static void main(String[] args) throws IOException, PMDException {
-        if (args.length < 2) {
-            System.out.println("Usage: <project path>");
+
+        String projectPath = null;
+        String rulePath = null;
+        String rendererType = "zita";
+
+        for (int i = 0; i < args.length; i++) {
+            switch (args[i]) {
+                case "--project":
+                    if (i + 1 < args.length)
+                        projectPath = args[++i];
+                    break;
+                case "--rules":
+                    if (i + 1 < args.length)
+                        rulePath = args[++i];
+                    break;
+                case "--renderer":
+                    if (i + 1 < args.length)
+                        rendererType = args[++i];
+                    break;
+            }
+        }
+        if (projectPath == null || rulePath == null) {
+            System.out.println("Usage: --project <project path> --rules <rule path> [--renderer <type>]");
             return;
         }
 
-
-
-
-
-
-        var path = Path.of(args[0]);
-        var rulePath = Path.of(args[1]).toString();
+        var path = Path.of(projectPath);
+        var rulePathStr = Path.of(rulePath).toString();
         var project = new ProcessingProject(
-                Files.find(path, 10000, (p, attr) -> attr.isRegularFile() && p.getFileName().toString().endsWith(".pde"))
-                        .map(p -> new ProcessingFile(p.getFileName().toString(), p.getFileName().toString(), readString(p)))
-                        .collect(Collectors.toList())
-        );
+                Files.find(path, 10000,
+                        (p, attr) -> attr.isRegularFile() && p.getFileName().toString().endsWith(".pde"))
+                        .map(p -> new ProcessingFile(p.getFileName().toString(), p.getFileName().toString(),
+                                readString(p)))
+                        .collect(Collectors.toList()));
 
-        var runner = new PMDRunner(rulePath);
-        var renderer = new AtelierStyleTextRenderer(project);
+        var runner = new PMDRunner(rulePathStr);
+        AbstractIncrementingRenderer renderer;
+        switch (rendererType.toLowerCase()) {
+            case "html":
+                renderer = new HTMLRenderer(); // implement or import this
+                break;
+            case "json":
+                renderer = new JsonRenderer(); // implement or import this
+                break;
+            default:
+                renderer = new AtelierStyleTextRenderer(project);
+        }
         renderer.setWriter(new PrintWriter(System.out));
         runner.Run(project, renderer);
     }
