@@ -1,5 +1,4 @@
 package nl.utwente;
-
 import net.sourceforge.pmd.RuleViolation;
 import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
 import net.sourceforge.pmd.renderers.HTMLRenderer;
