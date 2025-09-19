@@ -21,10 +21,6 @@ public class AtelierStyleTextRenderer extends AbstractIncrementingRenderer {
         return "";
     }
 
-    private String padLeft(String input, int length) {
-        return " ".repeat(length - input.length()) + input;
-    }
-
     @Override
     public void renderFileViolations(Iterator<RuleViolation> violations) {
         LinkedList<String> liViolations = new LinkedList<>();
