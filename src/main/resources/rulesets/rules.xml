@@ -6,23 +6,6 @@
     </description>
 
 
-    <rule name="HasVariableRule" message="No variables are declared in this code." class="nl.utwente.processing.pmd.rules.HasVariableRule">
-        <description>
-        Reports if no variables are declared in the code.
-        </description>
-        <priority>3</priority>
-        <example><![CDATA[
-        // No variable declared // ❌ flagged
-        int x = 5; // ✅ not flagged
-    ]]>        </example>
-    </rule>
-    <!-- Additional rules would go here -->
-
-
-
-    <!-- More rules continue here -->
-
-
 
     <rule name="HasUserDefinedMethod" message="No user-defined methods found." class="nl.utwente.processing.pmd.rules.HasUserDefinedMethod">
         <description>
@@ -639,4 +622,13 @@
 
     <rule ref="category/java/errorprone.xml/UnconditionalIfStatement" />
 
+    <rule name="HasModuloOperatorRule" message="Program uses the modulo operator (%) somewhere in the code." class="nl.utwente.processing.pmd.rules.HasModuloOperatorRule">
+        <description>
+        Flags usage of the modulo operator (%) anywhere in the code, including inner classes.
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+        int x = 10 % 3; // ❌ flagged
+        ]]></example>
+    </rule>
 </ruleset>
