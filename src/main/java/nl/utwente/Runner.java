@@ -1,6 +1,7 @@
 package nl.utwente;
 
 import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
+import net.sourceforge.pmd.renderers.CSVRenderer;
 import net.sourceforge.pmd.renderers.HTMLRenderer;
 import net.sourceforge.pmd.renderers.JsonRenderer;
 import nl.utwente.renderers.AtelierStyleTextRenderer;
@@ -72,6 +73,10 @@ public class Runner {
             case "json":
                 renderer = new JsonRenderer(); // implement or import this
                 break;
+            
+            case "csv":
+            renderer = new CSVRenderer();
+            break;
             default:
                 renderer = new AtelierStyleTextRenderer(project);
         }
