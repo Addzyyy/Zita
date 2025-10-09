@@ -631,4 +631,20 @@
         int x = 10 % 3; // ❌ flagged
         ]]></example>
     </rule>
+    <rule name="HasNoElseStatementRule" message="No 'else' statement found in the program." class="nl.utwente.processing.pmd.rules.HasNoElseStatementRule">
+        <description>
+        Flags if the program does not contain any 'else' statement.
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+        if (x > 5) {
+            println("Greater");
+        } // ❌ flagged (no else)
+        if (x > 5) {
+            println("Greater");
+        } else {
+            println("Not greater");
+        } // ✅ not flagged
+        ]]></example>
+    </rule>
 </ruleset>
