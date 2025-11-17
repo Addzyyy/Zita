@@ -10,7 +10,8 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import java.util.logging.Logger;
+import java.util.logging.Level;
 /** Wrapper around PMD that allows for easy processing of projects */
 public class PMDRunner {
 
@@ -18,6 +19,8 @@ public class PMDRunner {
 
     private PMDConfiguration config;
     private RuleSetFactory ruleSetFactory;
+
+    private RuleSets ruleSets;
     private ArrayList<DataSource> datasources = new ArrayList<DataSource>();
 
 
@@ -27,23 +30,43 @@ public class PMDRunner {
     }
 
     public PMDRunner(String ruleSets) {
+
+        Logger.getLogger("net.sourceforge.pmd").setLevel(Level.SEVERE);
         config = new PMDConfiguration();
         config.setMinimumPriority(RulePriority.LOW);
         config.setRuleSets(ruleSets);
         config.setIgnoreIncrementalAnalysis(true);
         ruleSetFactory = RulesetsFactoryUtils.createFactory(config);
+
+        try {
+            this.ruleSets = ruleSetFactory.createRuleSets(config.getRuleSets());
+
+        } catch (RuleSetNotFoundException e) {
+
+            throw new RuntimeException("Ruleset not found: " + e.getMessage());
+        }
     }
 
+    public List<RuleSet> getRuleSets() {
 
-    /** Run a list of files through PMD, sending the results to the provided renderer */
+        if (ruleSets != null) {
+
+            List<RuleSet> ruleSetList = new ArrayList<RuleSet>();
+
+            Collections.addAll(ruleSetList, ruleSets.getAllRuleSets());
+
+            return ruleSetList;
+        }
+        return Collections.emptyList();
+    }/** Run a list of files through PMD, sending the results to the provided renderer */
     public void Run(ProcessingProject project, Renderer renderer) throws PMDException {
         try {
             renderer.start();
 
             List<DataSource> datasources = Collections.singletonList(
                     new ReaderDataSource(new StringReader(project.getJavaProjectCode()), "Processing.pde")
-            ); 
-                                       
+            );
+
             try {
                 PMD.processFiles(
                         config,
