@@ -12,11 +12,11 @@ class HasAccessModifierRule : AbstractJavaRule() {
     private var referenceNode: Node? = null
 
     private fun hasAccessModifier(node: ASTFieldDeclaration): Boolean {
-        return node.isPrivate || node.isPublic || node.isProtected || node.isPackagePrivate
+        return node.isPrivate || node.isPublic || node.isProtected
     }
 
     private fun hasAccessModifier(node: ASTMethodDeclaration): Boolean {
-        return node.isPrivate || node.isPublic || node.isProtected || node.isPackagePrivate
+        return node.isPrivate || node.isPublic || node.isProtected
     }
 
     override fun visit(node: ASTFieldDeclaration?, data: Any?): Any? {
