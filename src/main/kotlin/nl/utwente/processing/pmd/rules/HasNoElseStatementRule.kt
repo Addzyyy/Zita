@@ -2,16 +2,14 @@ package nl.utwente.processing.pmd.rules
 
 import net.sourceforge.pmd.RuleContext
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
-import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
+import net.sourceforge.pmd.lang.java.ast.ASTIfStatement
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 
 /**
- * Rule that checks whether there is at least one function/method with parameters defined in the code.
- * If no such function is found, a violation is reported.
+ * Rule that flags if the program does NOT contain any 'else' statement.
  */
-class HasFunctionWithParametersRule : AbstractJavaRule() {
-
-    private var found = false
+class HasNoElseStatementRule : AbstractJavaRule() {
+    private var hasElse = false
     private var compilationUnit: ASTCompilationUnit? = null
 
     override fun visit(node: ASTCompilationUnit, data: Any?): Any? {
@@ -19,22 +17,27 @@ class HasFunctionWithParametersRule : AbstractJavaRule() {
         return super.visit(node, data)
     }
 
-    override fun visit(node: ASTMethodDeclaration, data: Any?): Any? {
-        if (node.formalParameters.size() > 0) {
-            found = true
+    override fun visit(node: ASTIfStatement, data: Any?): Any? {
+        if (node.hasElse()) {
+            hasElse = true
         }
         return super.visit(node, data)
     }
 
     override fun end(ctx: RuleContext?) {
-        if (!found && compilationUnit != null && ctx != null) {
+        if (!hasElse && ctx != null && compilationUnit != null) {
             addViolationWithMessage(
                 ctx,
-                compilationUnit!!,
+                compilationUnit,
                 message,
-                0,0
+                0,
+                0
             )
         }
         super.end(ctx)
     }
+}
+
+private fun ASTIfStatement.hasElse(): Boolean {
+    return this.elseBranch != null
 }

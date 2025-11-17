@@ -9,9 +9,12 @@ import net.sourceforge.pmd.properties.PropertyFactory
 import nl.utwente.processing.pmd.symbols.ProcessingApplet
 import nl.utwente.processing.pmd.utils.findMethods
 
-
-/// ** Class which implements the hasEventHandler smell as PMD rule. */
-class HasEventHandlerRule: AbstractJavaRule() {
+/**
+ * Rule that checks whether the Processing sketch has the standard structure,
+ * i.e., it contains both "setup" and "draw" methods.
+ * If either method is missing, a violation is reported.
+ */
+class HasStandardProcessingStructure: AbstractJavaRule() {
 
     companion object {
         private val CATEGORY: PropertyDescriptor<String> =
@@ -20,7 +23,6 @@ class HasEventHandlerRule: AbstractJavaRule() {
                 .defaultValue("default")
                 .build()
     }
-
     init {
         definePropertyDescriptor(CATEGORY)
     }
@@ -33,10 +35,11 @@ class HasEventHandlerRule: AbstractJavaRule() {
         //Check if this is a top node, not a inner class.
         if (!node.isNested) {
             val scope = node.scope as? ClassScope
-            val methodDecls = scope?.findMethods(ProcessingApplet.EVENT_METHOD_SIGNATURES)
-            if (methodDecls.isNullOrEmpty()) {
+            val hasDrawMethod = scope?.findMethods(ProcessingApplet.DRAW_METHOD_SIGNATURE);
+            val hasSetupMethod = scope?.findMethods(ProcessingApplet.SETUP_METHOD_SIGNATURE);
+            if (hasDrawMethod.isNullOrEmpty() || hasSetupMethod.isNullOrEmpty()) {
                 // setting line and column to 0, as this is a class level violation and does not have a specific line
-                addViolationWithMessage(data, node, message,0,0)
+                addViolationWithMessage(data, node, message,0,0);
             }
         }
         return super.visit(node, data)
