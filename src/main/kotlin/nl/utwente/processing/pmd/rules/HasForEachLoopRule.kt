@@ -31,7 +31,7 @@ class HasForEachLoopRule : AbstractJavaRule() {
             addViolationWithMessage(
                 ctx,
                 firstForEachNode,
-                "Submission uses a for-each loop. Consider asking the student about its purpose.",
+                message,
                 firstForEachNode!!.beginLine,
                 firstForEachNode!!.endLine
             )

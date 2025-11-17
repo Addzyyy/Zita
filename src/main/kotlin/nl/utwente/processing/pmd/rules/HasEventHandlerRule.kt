@@ -4,12 +4,26 @@ import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.lang.java.symboltable.ClassScope
+import net.sourceforge.pmd.properties.PropertyDescriptor
+import net.sourceforge.pmd.properties.PropertyFactory
 import nl.utwente.processing.pmd.symbols.ProcessingApplet
 import nl.utwente.processing.pmd.utils.findMethods
 
 
 /// ** Class which implements the hasEventHandler smell as PMD rule. */
 class HasEventHandlerRule: AbstractJavaRule() {
+
+    companion object {
+        private val CATEGORY: PropertyDescriptor<String> =
+            PropertyFactory.stringProperty("category")
+                .desc("Rule category")
+                .defaultValue("default")
+                .build()
+    }
+
+    init {
+        definePropertyDescriptor(CATEGORY)
+    }
 
     override fun visit(node: ASTCompilationUnit?, data: Any?): Any? {
         return super.visit(node, data)

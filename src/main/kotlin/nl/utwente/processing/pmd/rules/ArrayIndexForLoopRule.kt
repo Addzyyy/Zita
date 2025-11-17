@@ -28,7 +28,7 @@ class ArrayIndexForLoopRule : AbstractJavaRule() {
         val loopVarName = getLoopVariable(node)
 
         if (loopVarName != null) {
-            // In PMD 6.x, array access is represented by ASTPrimarySuffix with image "["
+            
             val suffixes = node.findDescendantsOfType(net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix::class.java)
             for (suffix in suffixes) {
                 if (suffix.isArrayDereference) {

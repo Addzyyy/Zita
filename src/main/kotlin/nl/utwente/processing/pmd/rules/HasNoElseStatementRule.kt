@@ -1,7 +1,7 @@
 package nl.utwente.processing.pmd.rules
 
 import net.sourceforge.pmd.RuleContext
-import net.sourceforge.pmd.lang.ast.Node
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
 import net.sourceforge.pmd.lang.java.ast.ASTIfStatement
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 
@@ -10,10 +10,14 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
  */
 class HasNoElseStatementRule : AbstractJavaRule() {
     private var hasElse = false
-    private var firstIfNode: Node? = null
+    private var compilationUnit: ASTCompilationUnit? = null
+
+    override fun visit(node: ASTCompilationUnit, data: Any?): Any? {
+        compilationUnit = node
+        return super.visit(node, data)
+    }
 
     override fun visit(node: ASTIfStatement, data: Any?): Any? {
-        if (firstIfNode == null) firstIfNode = node
         if (node.hasElse()) {
             hasElse = true
         }
@@ -21,10 +25,10 @@ class HasNoElseStatementRule : AbstractJavaRule() {
     }
 
     override fun end(ctx: RuleContext?) {
-        if (!hasElse && firstIfNode != null) {
+        if (!hasElse && ctx != null && compilationUnit != null) {
             addViolationWithMessage(
                 ctx,
-                firstIfNode,
+                compilationUnit,
                 message,
                 0,
                 0

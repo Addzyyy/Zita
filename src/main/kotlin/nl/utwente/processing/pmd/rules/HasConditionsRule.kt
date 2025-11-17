@@ -5,8 +5,11 @@ import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
 import net.sourceforge.pmd.lang.java.ast.ASTIfStatement
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.RuleContext
+import net.sourceforge.pmd.properties.PropertyDescriptor
+import net.sourceforge.pmd.properties.PropertyFactory
 
 class HasConditionsRule : AbstractJavaRule() {
+
 
     private var conditions = 0
     private var firstNode: Node? = null

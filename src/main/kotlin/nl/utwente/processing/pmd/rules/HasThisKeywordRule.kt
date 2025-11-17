@@ -6,6 +6,10 @@ import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression
 import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 
+/**
+ * Rule that checks whether the code uses the 'this' keyword.
+ * If the 'this' keyword is found, a violation is reported.
+ */
 class HasThisKeywordRule : AbstractJavaRule() {
 
     private var referenceNode: Node? = null
@@ -21,7 +25,6 @@ class HasThisKeywordRule : AbstractJavaRule() {
     override fun end(ctx: RuleContext?) {
         val node = referenceNode
         if (ctx != null && node != null) {
-            val message = "Submission uses 'this' keyword. Consider asking the student about its purpose."
             addViolationWithMessage(ctx, node, message, node.beginLine, node.endLine)
         }
         super.end(ctx)
