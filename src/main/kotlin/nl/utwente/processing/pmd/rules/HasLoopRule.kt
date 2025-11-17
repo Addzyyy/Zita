@@ -9,6 +9,10 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.properties.PropertyDescriptor
 import net.sourceforge.pmd.properties.PropertyFactory
 
+/**
+ * Rule that checks whether there is at least one loop (for or while) in the code.
+ * If no loops are found, a violation is reported.
+ */
 class HasLoopRule : AbstractJavaRule() {
 
     companion object {

@@ -52,14 +52,13 @@ class Has2DShapesRule : AbstractJavaRule() {
 
     override fun end(ctx: RuleContext?) {
         if (ctx != null && shape2DCount < 2) {
-            // Use firstShapeNode if we found any shapes, otherwise use compilationUnit
             val nodeToReport = firstShapeNode ?: compilationUnit
 
             if (nodeToReport != null) {
                 addViolationWithMessage(
                     ctx,
                     nodeToReport,
-                    "Code should contain at least 2 2D shape drawing calls",
+                    message,
                     0,
                     0
                 )

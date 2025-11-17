@@ -5,6 +5,13 @@ import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import nl.utwente.processing.pmd.symbols.ProcessingApplet
 
+/**
+ * Rule that checks whether event handler methods (like mousePressed, keyPressed) contain useful code.
+ * An event handler is considered useful if it contains control flow statements (if, for, while)
+ * or calls to other user-defined methods.
+ * If event handlers are found that do not meet these criteria, a violation is reported.
+ * Additionally, if no event handlers are found at all, a violation is also reported.
+ */
 class HasUsefulEventHandlerRule : AbstractJavaRule() {
     private var foundComplexity = false
     private val eventHandlersToFlag = mutableListOf<ASTMethodDeclaration>()

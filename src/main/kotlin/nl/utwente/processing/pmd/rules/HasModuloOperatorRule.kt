@@ -6,6 +6,10 @@ import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
 import net.sourceforge.pmd.lang.java.ast.ASTMultiplicativeExpression
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 
+/**
+ * Rule that checks whether there is at least one modulo operator (%) used in the code.
+ * If no modulo operator is found, a violation is reported.
+ */
 class HasModuloOperatorRule : AbstractJavaRule() {
     private var hasModulo = false
     private var compilationUnit: ASTCompilationUnit? = null

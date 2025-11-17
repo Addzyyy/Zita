@@ -6,9 +6,8 @@ import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 
 /**
- * Rule that flags if the program declares a settings() method.
- * The settings() method is advanced Processing functionality that students
- * should not use at this level.
+ * Rule that checks whether there is a method named "settings" defined in the code.
+ * If such a method is found, a violation is reported.
  */
 class HasSettingsMethodRule : AbstractJavaRule() {
     private var compilationUnit: ASTCompilationUnit? = null

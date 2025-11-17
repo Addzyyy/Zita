@@ -9,6 +9,11 @@ import net.sourceforge.pmd.properties.PropertyFactory
 import nl.utwente.processing.pmd.symbols.ProcessingApplet
 import nl.utwente.processing.pmd.utils.findMethods
 
+/**
+ * Rule that checks whether the Processing sketch has the standard structure,
+ * i.e., it contains both "setup" and "draw" methods.
+ * If either method is missing, a violation is reported.
+ */
 class HasStandardProcessingStructure: AbstractJavaRule() {
 
     companion object {

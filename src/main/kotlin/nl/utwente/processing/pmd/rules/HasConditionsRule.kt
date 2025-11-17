@@ -8,7 +8,12 @@ import net.sourceforge.pmd.RuleContext
 import net.sourceforge.pmd.properties.PropertyDescriptor
 import net.sourceforge.pmd.properties.PropertyFactory
 
+/**
+ * Rule that checks whether there are at least two conditional statements (if statements) in the code.
+ * If fewer than two conditions are found, a violation is reported.
+ */
 class HasConditionsRule : AbstractJavaRule() {
+
 
 
     private var conditions = 0

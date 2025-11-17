@@ -5,6 +5,10 @@ import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 
+/**
+ * Rule that checks whether there is at least one function/method with parameters defined in the code.
+ * If no such function is found, a violation is reported.
+ */
 class HasFunctionWithParametersRule : AbstractJavaRule() {
 
     private var found = false
