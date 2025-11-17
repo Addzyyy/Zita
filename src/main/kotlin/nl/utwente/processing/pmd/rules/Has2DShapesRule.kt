@@ -1,24 +1,41 @@
 package nl.utwente.processing.pmd.rules
 
 import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.RuleContext
 import nl.utwente.processing.pmd.symbols.ProcessingApplet
 import nl.utwente.processing.pmd.symbols.ProcessingAppletMethodCategory
 import nl.utwente.processing.pmd.utils.matches
 import net.sourceforge.pmd.lang.ast.Node
+import net.sourceforge.pmd.properties.PropertyDescriptor
+import net.sourceforge.pmd.properties.PropertyFactory
 
 class Has2DShapesRule : AbstractJavaRule() {
 
+    companion object {
+        private val CATEGORY: PropertyDescriptor<String> =
+            PropertyFactory.stringProperty("category")
+                .desc("Rule category")
+                .defaultValue("default")
+                .build()
+    }
+
+    init {
+        definePropertyDescriptor(CATEGORY)
+    }
+
     private var shape2DCount = 0
-    private var firstNode: Node? = null
     private var firstShapeNode: Node? = null
+    private var compilationUnit: ASTCompilationUnit? = null
+
+    override fun visit(node: ASTCompilationUnit, data: Any?): Any? {
+        // Store the compilation unit so we always have a node to report against
+        compilationUnit = node
+        return super.visit(node, data)
+    }
 
     override fun visit(node: ASTPrimaryExpression, data: Any): Any? {
-        if (firstNode == null) {
-            firstNode = node
-        }
-
         if (
             ProcessingApplet.DRAW_METHODS
                 .filter { it.category == ProcessingAppletMethodCategory.SHAPE_2D }
@@ -35,9 +52,17 @@ class Has2DShapesRule : AbstractJavaRule() {
 
     override fun end(ctx: RuleContext?) {
         if (ctx != null && shape2DCount < 2) {
-            val nodeToReport = firstShapeNode ?: firstNode
+            // Use firstShapeNode if we found any shapes, otherwise use compilationUnit
+            val nodeToReport = firstShapeNode ?: compilationUnit
+
             if (nodeToReport != null) {
-                addViolationWithMessage(ctx, nodeToReport, message, 0, 0)
+                addViolationWithMessage(
+                    ctx,
+                    nodeToReport,
+                    "Code should contain at least 2 2D shape drawing calls",
+                    0,
+                    0
+                )
             }
         }
         super.end(ctx)
