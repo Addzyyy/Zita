@@ -59,7 +59,7 @@ public class AtelierStyleTextRenderer extends AbstractIncrementingRenderer {
 
             String sRuleName = mAddSpacesToString(violation.getRule().getName()).trim();
             if (mViolations.containsKey(sRuleName)) {
-                mViolations.replace(sRuleName, mViolations.get(sRuleName) + 1);
+                mViolations.replace(sRuleName, Integer.valueOf(mViolations.get(sRuleName) + 1));
             } else {
                 mViolations.put(sRuleName, 1);
             }

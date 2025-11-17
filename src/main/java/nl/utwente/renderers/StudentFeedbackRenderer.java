@@ -6,11 +6,17 @@ import net.sourceforge.pmd.RuleSet;
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.Report;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
+import nl.utwente.processing.LineInFile;
+import nl.utwente.processing.ProcessingProject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public class TestRenderer extends AbstractAccumulatingRenderer {
+/** Renderer that produces student-friendly feedback based on PMD analysis */
+
+public class StudentFeedbackRenderer extends AbstractAccumulatingRenderer {
+
+    private static final Map<String, String> RULE_NAME_OVERRIDES = createRuleNameOverrides();
 
     private static final Map<String, String> RULE_CATEGORY_MAP = loadCategoryMapping();
 
@@ -19,41 +25,45 @@ public class TestRenderer extends AbstractAccumulatingRenderer {
     private Set<String> rulesWithViolations = new HashSet<>();
     private Boolean buildRuleStatus = null;
     private List<Report> accumulatedReports = new ArrayList<>();
+    private ProcessingProject project;
 
-    public TestRenderer() {
+    public StudentFeedbackRenderer() {
         super("test", "Test Renderer");
     }
 
-    /**
-     * Load rule category mappings from properties file
-     */
+    public StudentFeedbackRenderer(ProcessingProject project) {
+        super("test", "Test Renderer");
+
+        this.project = project;
+    }
+    // Helper methods to load rule name overrides and category mappings
+    private static Map<String, String> createRuleNameOverrides() {
+        Map<String, String> overrides = new HashMap<>();
+        overrides.put("FieldNamingConventions", "AttributeNamingConventions");
+        return overrides;
+    }
+
+    // Load rule category mappings from properties file
     private static Map<String, String> loadCategoryMapping() {
         Map<String, String> map = new HashMap<>();
-
-        try (InputStream input = TestRenderer.class.getClassLoader()
+        try (InputStream input = StudentFeedbackRenderer.class.getClassLoader()
                 .getResourceAsStream("rule-category-mapping.properties")) {
-
             if (input == null) {
                 System.err.println("Warning: rule-category-mapping.properties not found, rules will be uncategorized");
                 return map;
             }
-
             Properties props = new Properties();
             props.load(input);
-
             for (String key : props.stringPropertyNames()) {
                 String value = props.getProperty(key);
                 if (value != null && !value.trim().isEmpty()) {
                     map.put(key.trim(), value.trim());
                 }
             }
-
             System.err.println("Loaded " + map.size() + " rule category mappings");
-
         } catch (IOException e) {
             System.err.println("Error loading rule category mappings: " + e.getMessage());
         }
-
         return map;
     }
 
@@ -65,27 +75,67 @@ public class TestRenderer extends AbstractAccumulatingRenderer {
         this.buildRuleStatus = success;
     }
 
+    public void setProcessingProject(ProcessingProject project) {
+        this.project = project;
+    }
+
     @Override
     public String defaultFileExtension() {
         return "txt";
     }
 
     @Override
+    // Render a single file report
     public void renderFileReport(Report report) throws IOException {
         accumulatedReports.add(report);
-
         for (RuleViolation violation : report.getViolations()) {
             String ruleName = violation.getRule().getName();
             rulesWithViolations.add(ruleName);
             violationsByRule.computeIfAbsent(ruleName, k -> new ArrayList<>()).add(violation);
         }
-
         super.renderFileReport(report);
     }
 
+    // Map violation line numbers back to Processing code lines
+    private String mapViolationToProcessingLine(RuleViolation violation) {
+        if (project == null) {
+            int lineNumber = violation.getBeginLine();
+            if (lineNumber > 0) {
+                return "At line " + lineNumber + ": ";
+            }
+            return "";
+        }
+
+        try {
+            if (violation.getBeginLine() == 1) {
+                return "";
+            }
+
+            LineInFile begin = project.mapJavaProjectLineNumber(violation.getBeginLine());
+            LineInFile end = project.mapJavaProjectLineNumber(violation.getEndLine());
+
+            if (!begin.getFile().getId().equals(end.getFile().getId())) {
+                return "";
+            }
+
+            String fileName = begin.getFile().getName();
+            int lineNumber = begin.getLine();
+
+            if (lineNumber > 0) {
+                return "In " + fileName + " at line " + lineNumber + ": ";
+            }
+
+            return "";
+
+        } catch (IndexOutOfBoundsException ex) {
+            return "";
+        }
+    }
+
     @Override
+    // Final rendering of accumulated reports
+    // will need to refacor this as the method is too long and complex
     public void end() throws IOException {
-        // Check for parsing errors
         boolean hasParsingErrors = false;
         for (Report report : accumulatedReports) {
             if (report.hasErrors()) {
@@ -94,27 +144,25 @@ public class TestRenderer extends AbstractAccumulatingRenderer {
             }
         }
 
-        writer.write("========================================\n");
-        writer.write("SUBMISSION FEEDBACK\n");
-        writer.write("========================================\n\n");
+        writer.write("These suggestions were generated automatically by the Zita code quality tool.\n They are designed to help you improve your code, but they may occasionally be incorrect.\n If you're unsure about any suggestion, please ask your TA for clarification.\n\n");
 
-        // Build status
+        // Check if build failed by looking for ProgramRunsRule violations
+        boolean buildFailed = rulesWithViolations.contains("ProgramRunsRule") ||
+                             rulesWithViolations.contains("ProgramRuns");
+
+        // If there were parsing errors, indicate that we cannot evaluate requirements
         if (hasParsingErrors) {
-            writer.write("> Build Status: Fail ✗ (syntax/parse error)\n\n");
-            writer.write("Cannot evaluate requirements due to syntax errors.\n");
-            writer.write("Please fix compilation errors first.\n");
+            writer.write("> ProgramRuns: ❌ (syntax/parse error)\n\n");
+            writer.write("Cannot evaluate requirements due to syntax errors or an issue with your project.\n");
+            writer.write("Please review your submission to make sure it runs and your project is zipped correctly. \n");
             writer.flush();
             return;
-        } else if (buildRuleStatus != null) {
-            String status = buildRuleStatus ? "Pass ✓" : "Fail ✗";
-            writer.write("> Build Status: " + status + "\n\n");
         }
 
         writer.write("========================================\n");
         writer.write("MINIMUM REQUIREMENTS\n");
         writer.write("========================================\n\n");
 
-        // Group rules by category hierarchy
         Map<String, Map<String, List<RuleResult>>> categoryHierarchy = new LinkedHashMap<>();
         int totalRules = 0;
         int passedRules = 0;
@@ -125,17 +173,14 @@ public class TestRenderer extends AbstractAccumulatingRenderer {
                 for (Rule rule : ruleSet.getRules()) {
                     String ruleName = rule.getName();
 
-                    if (ruleName.equals("DoesItBuildRule")) {
+                    // Skip ProgramRunsRule as it's handled separately
+                    if (ruleName.equals("ProgramRunsRule") || ruleName.equals("ProgramRuns")) {
                         continue;
                     }
-
                     totalRules++;
                     boolean passed = !rulesWithViolations.contains(ruleName);
                     if (passed) passedRules++;
-
                     String status = passed ? "✅" : "❌";
-
-                    // Get the violation message for failed rules
                     String violationMessage = null;
                     if (!passed && violationsByRule.containsKey(ruleName)) {
                         List<RuleViolation> violations = violationsByRule.get(ruleName);
@@ -143,17 +188,13 @@ public class TestRenderer extends AbstractAccumulatingRenderer {
                             violationMessage = violations.get(0).getDescription();
                         }
                     }
-
-                    // Get category from mapping
                     String fullCategory = getCategoryForRule(rule);
                     String mainCategory = "Uncategorized";
                     String subCategory = "General";
-
                     if (fullCategory != null && fullCategory.contains(".")) {
                         String[] parts = fullCategory.split("\\.");
                         if (parts.length >= 2) {
                             mainCategory = formatCategoryName(parts[0]);
-
                             StringBuilder subCat = new StringBuilder();
                             for (int i = 1; i < parts.length; i++) {
                                 if (subCat.length() > 0) subCat.append(" ");
@@ -164,22 +205,17 @@ public class TestRenderer extends AbstractAccumulatingRenderer {
                     } else if (fullCategory != null) {
                         mainCategory = formatCategoryName(fullCategory);
                     }
-
-                    // Track critical failures (mastery requirements)
                     if (!passed && mainCategory.toLowerCase().contains("mastery")) {
                         criticalFailures.add(formatRuleName(ruleName) + " [" + subCategory + "]");
                     }
-
-                    // Add to hierarchy with violation message
                     categoryHierarchy
                             .computeIfAbsent(mainCategory, k -> new LinkedHashMap<>())
                             .computeIfAbsent(subCategory, k -> new ArrayList<>())
-                            .add(new RuleResult(ruleName, status, passed, rule, violationMessage));
+                            .add(new RuleResult(ruleName, status, passed, rule, violationMessage, fullCategory));
                 }
             }
         }
 
-        // Separate minimum and mastery categories
         Map<String, Map<String, List<RuleResult>>> minimumCategories = new LinkedHashMap<>();
         Map<String, Map<String, List<RuleResult>>> masteryCategories = new LinkedHashMap<>();
 
@@ -192,24 +228,38 @@ public class TestRenderer extends AbstractAccumulatingRenderer {
             }
         }
 
-        // Output minimum requirements with messages
         for (Map.Entry<String, Map<String, List<RuleResult>>> mainEntry : minimumCategories.entrySet()) {
             for (Map.Entry<String, List<RuleResult>> subEntry : mainEntry.getValue().entrySet()) {
                 String subCategory = subEntry.getKey();
                 writer.write("-- " + subCategory + " --\n");
 
-                for (RuleResult result : subEntry.getValue()) {
-                    String displayName = formatRuleName(result.name);
-                    writer.write("> " + displayName + ": " + result.status);
+                // Output ProgramRuns check first if this is the Submission category
+                if (subCategory.equalsIgnoreCase("Submission")) {
+                    if (buildFailed) {
+                        String buildRuleName = violationsByRule.containsKey("DoesItBuildRule") ? "DoesItBuildRule" :
+                                              (violationsByRule.containsKey("ProgramRunsRule") ? "ProgramRunsRule" : "ProgramRuns");
 
-                    // Add violation messages below for failed rules (show up to 3)
+                        if (violationsByRule.containsKey(buildRuleName)) {
+                            List<RuleViolation> buildViolations = violationsByRule.get(buildRuleName);
+                            if (!buildViolations.isEmpty()) {
+                                String violationMessage = buildViolations.get(0).getDescription();
+                                writer.write("> ProgramRuns: ❌ " + violationMessage + "\n");
+                            }
+                        }
+                    } else {
+                        // Build passed - show it as passing
+                        writer.write("> ProgramRuns: ✅\n");
+                    }
+                }
+
+                for (RuleResult result : subEntry.getValue()) {
+                    String displayName = getDisplayRuleName(result.name);
+                    writer.write("> " + displayName + ": " + result.status);
                     if (!result.passed) {
                         List<RuleViolation> violations = violationsByRule.get(result.name);
-
                         if (violations != null && !violations.isEmpty()) {
                             int maxToShow = 3;
                             int count = 0;
-
                             for (RuleViolation violation : violations) {
                                 if (count < maxToShow) {
                                     writer.write("\n");
@@ -217,92 +267,94 @@ public class TestRenderer extends AbstractAccumulatingRenderer {
                                     count++;
                                 }
                             }
-
-                            // Show count if there are more
                             if (violations.size() > maxToShow) {
                                 writer.write("\n");
                                 writer.write("  └─ (and " + (violations.size() - maxToShow) + " more violations)");
                             }
                         }
                     }
-
                     writer.write("\n");
                 }
                 writer.write("\n");
             }
         }
 
-        // Output mastery requirements with messages
         if (!masteryCategories.isEmpty()) {
-            writer.write("========================================\n");
-            writer.write("MASTERY REQUIREMENTS\n");
-            writer.write("========================================\n\n");
-
+            boolean hasMasteryViolations = false;
             for (Map.Entry<String, Map<String, List<RuleResult>>> mainEntry : masteryCategories.entrySet()) {
                 for (Map.Entry<String, List<RuleResult>> subEntry : mainEntry.getValue().entrySet()) {
-                    String subCategory = subEntry.getKey();
-                    writer.write("-- " + subCategory + " --\n");
-
                     for (RuleResult result : subEntry.getValue()) {
-                        String displayName = formatRuleName(result.name);
-                        writer.write("> " + displayName + ": " + result.status);
-
-                        // Add violation messages below for failed rules (show up to 3)
                         if (!result.passed) {
-                            List<RuleViolation> violations = violationsByRule.get(result.name);
+                            hasMasteryViolations = true;
+                            break;
+                        }
+                    }
+                    if (hasMasteryViolations) break;
+                }
+                if (hasMasteryViolations) break;
+            }
 
-                            if (violations != null && !violations.isEmpty()) {
-                                int maxToShow = 5;
-                                int count = 0;
+            if (hasMasteryViolations) {
+                writer.write("=============================================\n");
+                writer.write("Additional Design & Code Style improvements \n");
+                writer.write("==============================================\n\n");
 
-                                for (RuleViolation violation : violations) {
-                                    if (count < maxToShow) {
-                                        writer.write("\n");
-                                        writer.write("  └─ " + violation.getDescription());
-                                        count++;
-                                    }
-                                }
-
-                                // Show count if there are more
-                                if (violations.size() > maxToShow) {
-                                    writer.write("\n");
-                                    writer.write("  └─ (and " + (violations.size() - maxToShow) + " more violations)");
-                                }
+                for (Map.Entry<String, Map<String, List<RuleResult>>> mainEntry : masteryCategories.entrySet()) {
+                    for (Map.Entry<String, List<RuleResult>> subEntry : mainEntry.getValue().entrySet()) {
+                        String subCategory = subEntry.getKey();
+                        List<RuleResult> failedRules = new ArrayList<>();
+                        for (RuleResult result : subEntry.getValue()) {
+                            if (!result.passed) {
+                                failedRules.add(result);
                             }
                         }
-
-                        writer.write("\n");
+                        if (!failedRules.isEmpty()) {
+                            writer.write("-- " + subCategory + " --\n");
+                            for (RuleResult result : failedRules) {
+                                String displayName = getDisplayRuleName(result.name);
+                                writer.write("> " + displayName + ": " + result.status);
+                                List<RuleViolation> violations = violationsByRule.get(result.name);
+                                if (violations != null && !violations.isEmpty()) {
+                                    int maxToShow = 5;
+                                    int count = 0;
+                                    for (RuleViolation violation : violations) {
+                                        if (count < maxToShow) {
+                                            writer.write("\n");
+                                            String locationPrefix = mapViolationToProcessingLine(violation);
+                                            writer.write("  └─ " + locationPrefix + violation.getDescription());
+                                            count++;
+                                        }
+                                    }
+                                    if (violations.size() > maxToShow) {
+                                        writer.write("\n");
+                                        writer.write("  └─ (and " + (violations.size() - maxToShow) + " more violations)");
+                                    }
+                                }
+                                writer.write("\n");
+                            }
+                            writer.write("\n");
+                        }
                     }
-                    writer.write("\n");
                 }
             }
         }
-
-
-
         writer.flush();
     }
 
-    /**
-     * Get category for a rule from the properties mapping
-     */
+    // Determine category for a given rule
     private String getCategoryForRule(Rule rule) {
         String ruleName = rule.getName();
-
-        // Check properties file mapping
         if (RULE_CATEGORY_MAP.containsKey(ruleName)) {
             return RULE_CATEGORY_MAP.get(ruleName);
         }
-
-        // Fallback: check if rule has category property
         String propertyCategory = getRuleProperty(rule, "category");
         if (propertyCategory != null && !propertyCategory.isEmpty()) {
             return propertyCategory;
         }
-
         return "uncategorized";
     }
 
+    // Helper to get a rule property value as string
     private String getRuleProperty(Rule rule, String propertyName) {
         try {
             PropertyDescriptor<?> descriptor = rule.getPropertyDescriptor(propertyName);
@@ -311,35 +363,46 @@ public class TestRenderer extends AbstractAccumulatingRenderer {
                 return value != null ? value.toString() : null;
             }
         } catch (Exception e) {
-            // Property doesn't exist
         }
         return null;
     }
 
+    // Format category names nicely
     private String formatCategoryName(String category) {
-        // Convert "minimum" or "constructs" to "Minimum" or "Constructs"
         if (category == null || category.isEmpty()) return "";
         return category.substring(0, 1).toUpperCase() + category.substring(1).toLowerCase();
     }
 
+    // Get display name for a rule, applying overrides if necessary
+    private String getDisplayRuleName(String ruleName) {
+        // Check if there's an override for this rule name
+        if (RULE_NAME_OVERRIDES.containsKey(ruleName)) {
+            ruleName = RULE_NAME_OVERRIDES.get(ruleName);
+        }
+        return formatRuleName(ruleName);
+    }
+
+    // Format rule names nicely
     private String formatRuleName(String ruleName) {
-        // Convert "HasUserDefinedMethod" to "Has User Defined Method"
         return ruleName.replaceAll("([A-Z])", " $1").trim();
     }
 
+   // Data class to hold rule result information
     private static class RuleResult {
         String name;
         String status;
         boolean passed;
         Rule rule;
         String violationMessage;
+        String fullCategory;
 
-        RuleResult(String name, String status, boolean passed, Rule rule, String violationMessage) {
+        RuleResult(String name, String status, boolean passed, Rule rule, String violationMessage, String fullCategory) {
             this.name = name;
             this.status = status;
             this.passed = passed;
             this.rule = rule;
             this.violationMessage = violationMessage;
+            this.fullCategory = fullCategory;
         }
     }
 }
