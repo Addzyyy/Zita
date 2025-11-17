@@ -4,6 +4,11 @@ import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 
+/**
+ * Rule that checks whether there is at least one user-defined constructor in each class in the code.
+ * A user-defined constructor is defined as a constructor that matches the class name.
+ * If no such constructor is found in a class, a violation is reported.
+ */
 class HasUserDefinedConstructor: AbstractJavaRule() {
 
     private var outerClass: ASTClassOrInterfaceDeclaration? = null

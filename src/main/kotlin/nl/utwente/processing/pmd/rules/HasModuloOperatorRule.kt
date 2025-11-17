@@ -1,17 +1,17 @@
 package nl.utwente.processing.pmd.rules
 
 import net.sourceforge.pmd.RuleContext
+import net.sourceforge.pmd.lang.ast.Node
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
-import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration
+import net.sourceforge.pmd.lang.java.ast.ASTMultiplicativeExpression
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 
 /**
- * Rule that checks whether there is at least one function/method with parameters defined in the code.
- * If no such function is found, a violation is reported.
+ * Rule that checks whether there is at least one modulo operator (%) used in the code.
+ * If no modulo operator is found, a violation is reported.
  */
-class HasFunctionWithParametersRule : AbstractJavaRule() {
-
-    private var found = false
+class HasModuloOperatorRule : AbstractJavaRule() {
+    private var hasModulo = false
     private var compilationUnit: ASTCompilationUnit? = null
 
     override fun visit(node: ASTCompilationUnit, data: Any?): Any? {
@@ -19,20 +19,21 @@ class HasFunctionWithParametersRule : AbstractJavaRule() {
         return super.visit(node, data)
     }
 
-    override fun visit(node: ASTMethodDeclaration, data: Any?): Any? {
-        if (node.formalParameters.size() > 0) {
-            found = true
+    override fun visit(node: ASTMultiplicativeExpression, data: Any?): Any? {
+        if (node.image == "%") {
+            hasModulo = true
         }
         return super.visit(node, data)
     }
 
     override fun end(ctx: RuleContext?) {
-        if (!found && compilationUnit != null && ctx != null) {
+        if (!hasModulo && ctx != null && compilationUnit != null) {
             addViolationWithMessage(
                 ctx,
-                compilationUnit!!,
+                compilationUnit,
                 message,
-                0,0
+                0,
+                0
             )
         }
         super.end(ctx)

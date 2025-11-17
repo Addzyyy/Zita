@@ -1,13 +1,15 @@
 package nl.utwente;
 
-import net.sourceforge.pmd.renderers.AbstractIncrementingRenderer;
-import net.sourceforge.pmd.renderers.HTMLRenderer;
-import net.sourceforge.pmd.renderers.JsonRenderer;
+import net.sourceforge.pmd.renderers.*;
+import nl.utwente.processing.pmd.rules.DoesItBuildRule;
 import nl.utwente.renderers.AtelierStyleTextRenderer;
 import nl.utwente.processing.ProcessingFile;
 import nl.utwente.processing.ProcessingProject;
 import nl.utwente.processing.pmd.PMDException;
 import nl.utwente.processing.pmd.PMDRunner;
+import nl.utwente.renderers.StudentFeedbackRenderer;
+import nl.utwente.renderers.VivaHandoverRenderer;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -15,7 +17,7 @@ import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 public class Runner {
-    // I'm sorry, but this is only for development purposes
+    
     static String readString(Path path) {
         try {
             return Files.readString(path);
@@ -56,6 +58,9 @@ public class Runner {
 
         var path = Path.of(projectPath);
         var rulePathStr = Path.of(rulePath).toString();
+
+        DoesItBuildRule.Companion.setSketchPath(projectPath);
+
         var project = new ProcessingProject(
                 Files.find(path, 10000,
                         (p, attr) -> attr.isRegularFile() && p.getFileName().toString().endsWith(".pde"))
@@ -64,18 +69,49 @@ public class Runner {
                         .collect(Collectors.toList()));
 
         var runner = new PMDRunner(rulePathStr);
-        AbstractIncrementingRenderer renderer;
+        AbstractIncrementingRenderer renderer = null;
+        AbstractAccumulatingRenderer accRenderer = null;
         switch (rendererType.toLowerCase()) {
             case "html":
-                renderer = new HTMLRenderer(); // implement or import this
+                renderer = new HTMLRenderer(); 
                 break;
             case "json":
-                renderer = new JsonRenderer(); // implement or import this
+                renderer = new JsonRenderer(); 
+                break;
+            
+            case "csv":
+            renderer = new CSVRenderer();
+            break;
+
+            case "handover":
+                accRenderer = new VivaHandoverRenderer();
+                break;
+
+            case "student":
+                accRenderer = new StudentFeedbackRenderer(project);
                 break;
             default:
-                renderer = new AtelierStyleTextRenderer(project);
+            renderer = new AtelierStyleTextRenderer(project);
         }
-        renderer.setWriter(new PrintWriter(System.out));
-        runner.Run(project, renderer);
-    }
-}
+
+        if (accRenderer instanceof StudentFeedbackRenderer) {
+            ((StudentFeedbackRenderer) accRenderer).setRuleSets(runner.getRuleSets());
+        }
+        if (accRenderer instanceof VivaHandoverRenderer) {
+            ((VivaHandoverRenderer) accRenderer).setRuleSets(runner.getRuleSets());
+        }
+        if (accRenderer != null) {
+            accRenderer.setWriter(new PrintWriter(System.out));
+            runner.Run(project, accRenderer);
+            DoesItBuildRule.Companion.resetRunFlag();
+        } else {
+
+           renderer.setWriter(new PrintWriter(System.out));
+           runner.Run(project, renderer);
+        }
+
+
+        }
+        }
+
+

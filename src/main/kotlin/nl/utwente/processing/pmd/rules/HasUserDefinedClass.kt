@@ -3,6 +3,11 @@ package nl.utwente.processing.pmd.rules
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 
+/**
+ * Rule that checks whether there is at least one user-defined class in the code.
+ * A user-defined class is defined as a class that contains at least one inner class.
+ * If no such class is found, a violation is reported.
+ */
 class HasUserDefinedClass: AbstractJavaRule() {
 
     private var checkedOuter = false
