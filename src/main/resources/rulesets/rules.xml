@@ -5,7 +5,67 @@
     Ruleset for zita focusing on basic coding practices, variable usage, and event handling in Processing programs used at macquarie university in COMP1000 - introduction to computer programming.
     </description>
 
+    <rule name="HasVariableRule"
+          language="java"
+          message="File must declare at least one variable."
+          class="nl.utwente.processing.pmd.rules.HasVariableRule">
+        <description>Reports when a Java compilation unit contains no variable declarations.</description>
+        <priority>3</priority>
+        <example>
+            // Bad
+            public class A { }
+            // Good
+            public class A { private int x; }
+        </example>
+    </rule>
 
+
+    <rule name="HasHeaderCommentRule"
+          message="File should contain a header comment with a link"
+          class="nl.utwente.processing.pmd.rules.HasHeaderCommentRule">
+        <description>
+            Checks if the file contains a header comment with a URL/link.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="category" value="minimum"/>
+        </properties>
+
+
+        <example><![CDATA[
+    // Source: https://example.com/my-sketch
+    // This sketch is based on the tutorial at the link above
+
+    void setup() {
+        size(400, 400);
+    }
+
+    void draw() {
+        background(255);
+    }
+]]>
+        </example>
+    </rule>
+
+    <rule name="ProcessingJavaBuildRule"
+          message="Sketch must build successfully"
+          class="nl.utwente.processing.pmd.rules.DoesItBuildRule">
+        <description>
+            Checks if the Processing sketch builds successfully using processing-java --build.
+        </description>
+        <priority>1</priority>
+        <example><![CDATA[
+    // Sketch should compile without errors
+    void setup() {
+        size(400, 400);
+    }
+
+    void draw() {
+        background(255);
+    }
+]]>
+        </example>
+    </rule>
 
     <rule name="HasUserDefinedMethod" message="No user-defined methods found." class="nl.utwente.processing.pmd.rules.HasUserDefinedMethod">
         <description>
@@ -18,6 +78,27 @@
     ]]>        </example>
     </rule>
 
+    <rule name="HasStandardProcessingStructure" message="Program does not follow standard Processing structure (missing or incorrect setup() and/or draw())." class="nl.utwente.processing.pmd.rules.HasStandardProcessingStructure">
+        <description>
+            Ensures a Processing sketch defines the standard lifecycle methods: a parameterless void setup() and a parameterless void draw().
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+        // Missing draw() -> ❌ flagged
+        void setup() {
+            size(400, 400);
+        }
+
+        // Missing setup() -> ❌ flagged
+        void draw() {
+            background(255);
+        }
+
+        // Incorrect signature -> ❌ flagged
+        int setup(int x) { return 0; }
+        void draw(int t) { /* wrong signature */ }
+    ]]></example>
+    </rule>
 
 
 
@@ -116,14 +197,16 @@
         ]]>        </example>
     </rule>
 
-    <rule name="HasPrivateModifierRule" message="The 'private' access modifier is used." class="nl.utwente.processing.pmd.rules.HasPrivateModifierRule">
+    <rule name="HasAccessModifierRule" message="An access modifier (private, public, protected, or package-private) is used." class="nl.utwente.processing.pmd.rules.HasAccessModifierRule">
         <description>
-            Reports use of the 'private' access modifier on fields or methods.
+            Reports use of any access modifier (private, public, protected, or package-private) on fields or methods.
         </description>
         <priority>3</priority>
         <example><![CDATA[
             private int secret; // ❌ flagged
-            private void helper() { ... } // ❌ flagged
+            public int count; // ❌ flagged
+            protected void helper() { ... } // ❌ flagged
+            int value; // ❌ flagged (package-private)
         ]]>        </example>
     </rule>
 
@@ -205,7 +288,10 @@
         <description>
             Reports if the code contains few or no arithmetic operations involving variables.
         </description>
-        <priority>3</priority>
+        <priority>1</priority>
+        <properties>
+            <property name="category" value="minimum"/>
+        </properties>
         <example>
             <![CDATA[
                 int x = 100;
@@ -647,4 +733,243 @@
         } // ✅ not flagged
         ]]></example>
     </rule>
+    <rule name="HasNoBooleanOperatorRule" message="No boolean operator found in the program." class="nl.utwente.processing.pmd.rules.HasNoBooleanOperatorRule">
+        <description>
+        Flags if the program does not contain any boolean operator.
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+        if (x > 5 && y < 10) { // ✅ not flagged
+            println("Valid");
+        }
+        if (x > 5) { // ❌ flagged (no boolean operator)
+            println("Greater");
+        }
+        ]]></example>
+    </rule>
+    <rule name="HasImportStatementRule" message="Import statement found in the program." class="nl.utwente.processing.pmd.rules.HasImportStatementRule">
+        <description>
+        Flags if the program contains any import statement.
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+        // No import statement // ✅ not flagged
+        import java.util.*; // ❌ flagged
+        ]]></example>
+    </rule>
+    <rule name="HasAbstractClassOrInterfaceRule" message="Abstract class or interface declared in the program." class="nl.utwente.processing.pmd.rules.HasAbstractClassOrInterfaceRule">
+        <description>
+        Flags if the program declares any abstract class or interface, including inner classes.
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+        abstract class MyAbstractClass {} // ❌ flagged
+        interface MyInterface {} // ❌ flagged
+        class Outer {
+            abstract class InnerAbstract {} // ❌ flagged
+            interface InnerInterface {} // ❌ flagged
+        }
+        class Concrete {} // ✅ not flagged
+        ]]></example>
+    </rule>
+    <rule name="HasTripleNestedClassRule" message="Class declared inside a class inside a class (triple nested class) found in the program." class="nl.utwente.processing.pmd.rules.HasTripleNestedClassRule">
+        <description>
+        Flags if the program declares a class inside a class inside a class (triple nested class).
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+        class Outer {
+            class Middle {
+                class Inner {
+                    // ❌ flagged (triple nested)
+                }
+            }
+        }
+        class NotNested {} // ✅ not flagged
+        class SingleNested {
+            class Inner {} // ✅ not flagged
+        }
+        ]]></example>
+    </rule>
+   
+    
+    <rule name="EventHandlerNoDeclaredCallRule" message="No event handler calls any declared method in the program." class="nl.utwente.processing.pmd.rules.EventHandlerNoDeclaredCallRule">
+        <description>
+        Flags if none of the event handler methods call any declared methods in the program. If at least one event handler calls a declared method, no violation is reported for any event handler.
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+        void mousePressed() {
+            // No method calls // ❌ flagged
+        }
+        void mouseReleased() {
+            println("Hello"); // ❌ flagged (if println is not declared)
+        }
+        void mouseDragged() {
+            customMethod(); // ✅ not flagged (if customMethod is declared)
+        }
+        void customMethod() {
+            // ...
+        }
+        ]]></example>
+    </rule>
+    <rule name="EventHandlerNoControlFlowRule" message="No event handler contains a for loop or if statement." class="nl.utwente.processing.pmd.rules.EventHandlerNoControlFlowRule">
+        <description>
+        Flags if none of the event handler methods contain a for loop or if statement. If at least one event handler contains a for loop or if statement, no violation is reported for any event handler.
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+        void mousePressed() {
+            // No control flow // ❌ flagged
+        }
+        void mouseReleased() {
+            for (int i = 0; i < 10; i++) { println(i); } // ✅ not flagged
+        }
+        void mouseDragged() {
+            if (true) { println("Hello"); } // ✅ not flagged
+        }
+        ]]></example>
+    </rule>
+    <rule name="ClassCallsDrawMethodRule" message="An inner class method calls a draw method." class="nl.utwente.processing.pmd.rules.ClassCallsDrawMethodRule">
+        <description>
+        Flags if no method inside an inner class calls any function listed in DRAW_METHODS (see ProcessingApplet.kt).
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+        class Outer {
+            class Inner {
+                void someMethod() {
+                    println("Hello"); // ❌ flagged (no draw method called)
+                }
+            }
+        }
+        class Outer2 {
+            class Inner2 {
+                void someMethod() {
+                    draw(); // ✅ not flagged
+                }
+            }
+        }
+        ]]></example>
+    </rule>
+
+    <rule name="UsefulEventHandlerRule"
+          language="java"
+          message="Event handlers should contain control flow or call declared methods"
+          class="nl.utwente.processing.pmd.rules.HasUsefulEventHandlerRule">
+        <description>
+            Checks that event handler methods are not too simplistic. They should either:
+            - Contain control flow statements (if, for, while), OR
+            - Call declared methods (user-defined functions)
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="category" value="minimum.demonstrates-mastery"/>
+        </properties>
+        <example><![CDATA[
+    // ✓ PASS - has control flow
+    void mousePressed() {
+        if (mouseX > width/2) {
+            background(255);
+        }
+    }
+
+    // ✓ PASS - calls declared method
+    void mousePressed() {
+        doSomething();
+    }
+
+    // ✗ FAIL - too simple
+    void mousePressed() {
+        x = 10;  // Just assignment, no control flow or method calls
+    }
+]]>
+        </example>
+    </rule>
+
+    <rule name="HasArrayIndexForLoop" message="No index-based for loop found for array iteration." class="nl.utwente.processing.pmd.rules.ArrayIndexForLoopRule">
+        <description>
+            Flags if arrays are not iterated using a for loop with an index/counter. If an index-based for loop is found iterating an array, does not flag. If only for-each loops or no loops are used, flags the code.
+        </description>
+        <priority>1</priority>
+        <example><![CDATA[
+        int[] arr = {1,2,3};
+        for (int i = 0; i < arr.length; i++) {
+            println(arr[i]); // ✅ not flagged
+        }
+        for (int n : arr) {
+            println(n); // ❌ flagged
+        }
+        ]]></example>
+    </rule>
+
+    <rule name="HasClassWithConstructorRule"
+          message="Classes should have explicit constructors"
+          class="nl.utwente.processing.pmd.rules.HasClassWithConstructorRule">
+        <description>
+            Checks that user-defined classes have explicit constructors.
+            Fails if no classes are found or if classes exist without constructors.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="category" value="minimum.demonstrates-mastery.oop"/>
+        </properties>
+        <example><![CDATA[
+// ✓ PASS - class with constructor
+class Ball {
+    int x, y;
+
+    Ball(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+// ✗ FAIL - class without constructor
+class Ball {
+    int x, y;
+    // No constructor!
+}
+
+// ✗ FAIL - no classes at all
+void setup() {
+    size(400, 400);
+}
+]]>
+        </example>
+    </rule>
+
+    <rule name="HasInheritanceRule"
+          language="java"
+          message="Inheritance found using the 'extends' keyword"
+          class="nl.utwente.processing.pmd.rules.HasInheritanceRule">
+        <description>
+            Flags if students are using inheritance through the extends keyword.
+            Passes if no user-defined classes use inheritance.
+            Fails if at least one user-defined class extends another class.
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+// ✗ FAIL - using inheritance
+class Animal {
+    String name;
+}
+
+class Dog extends Animal {
+    // This will be flagged
+}
+
+// ✓ PASS - no inheritance
+class Ball {
+    int x, y;
+
+    Ball(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+]]>
+        </example>
+    </rule>
+
 </ruleset>
