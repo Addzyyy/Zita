@@ -6,13 +6,21 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
 import net.sourceforge.pmd.RuleContext
 import net.sourceforge.pmd.lang.ast.Node
 
-/// Rule that flags the use of the 'private' access modifier on variables (fields) and functions (methods)
-class HasPrivateModifierRule : AbstractJavaRule() {
+/// Rule that flags the use of any access modifier (private, public, protected, or package-private) on variables (fields) and functions (methods)
+class HasAccessModifierRule : AbstractJavaRule() {
     private var found = false
     private var referenceNode: Node? = null
 
+    private fun hasAccessModifier(node: ASTFieldDeclaration): Boolean {
+        return node.isPrivate || node.isPublic || node.isProtected || node.isPackagePrivate
+    }
+
+    private fun hasAccessModifier(node: ASTMethodDeclaration): Boolean {
+        return node.isPrivate || node.isPublic || node.isProtected || node.isPackagePrivate
+    }
+
     override fun visit(node: ASTFieldDeclaration?, data: Any?): Any? {
-        if (node != null && node.isPrivate) {
+        if (node != null && hasAccessModifier(node)) {
             found = true
             if (referenceNode == null) referenceNode = node
         }
@@ -20,7 +28,7 @@ class HasPrivateModifierRule : AbstractJavaRule() {
     }
 
     override fun visit(node: ASTMethodDeclaration?, data: Any?): Any? {
-        if (node != null && node.isPrivate) {
+        if (node != null && hasAccessModifier(node)) {
             found = true
             if (referenceNode == null) referenceNode = node
         }
