@@ -10,7 +10,7 @@ import java.io.File
 import java.io.InputStreamReader
 import java.util.concurrent.TimeUnit
 
-*/**
+/**
  * Rule that checks whether the Processing sketch builds successfully using processing-java.
  * If the build fails, a violation is reported.
  */
