@@ -3,6 +3,8 @@ package nl.utwente.processing.pmd.rules
 import net.sourceforge.pmd.RuleContext
 import net.sourceforge.pmd.lang.java.ast.*
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
+import net.sourceforge.pmd.properties.PropertyDescriptor
+import net.sourceforge.pmd.properties.PropertyFactory
 import nl.utwente.processing.pmd.symbols.ProcessingApplet
 
 /**
@@ -13,6 +15,19 @@ import nl.utwente.processing.pmd.symbols.ProcessingApplet
  * Additionally, if no event handlers are found at all, a violation is also reported.
  */
 class HasUsefulEventHandlerRule : AbstractJavaRule() {
+
+    companion object {
+        private val CATEGORY: PropertyDescriptor<String> =
+            PropertyFactory.stringProperty("category")
+                .desc("Rule category")
+                .defaultValue("default")
+                .build()
+    }
+
+    init {
+        definePropertyDescriptor(CATEGORY)
+    }
+
     private var foundComplexity = false
     private val eventHandlersToFlag = mutableListOf<ASTMethodDeclaration>()
     private var declaredMethodNames: Set<String> = emptySet()

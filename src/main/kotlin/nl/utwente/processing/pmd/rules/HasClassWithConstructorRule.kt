@@ -5,6 +5,8 @@ import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
+import net.sourceforge.pmd.properties.PropertyDescriptor
+import net.sourceforge.pmd.properties.PropertyFactory
 
 /**
  * Rule that checks if user-defined classes have explicit constructors.
@@ -16,6 +18,19 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule
  * - At least one user-defined class has an explicit constructor
  */
 class HasClassWithConstructorRule : AbstractJavaRule() {
+
+    companion object {
+        private val CATEGORY: PropertyDescriptor<String> =
+            PropertyFactory.stringProperty("category")
+                .desc("Rule category")
+                .defaultValue("default")
+                .build()
+    }
+
+    init {
+        definePropertyDescriptor(CATEGORY)
+    }
+
     private var compilationUnit: ASTCompilationUnit? = null
     private var hasUserDefinedClass = false
     private var hasConstructor = false
